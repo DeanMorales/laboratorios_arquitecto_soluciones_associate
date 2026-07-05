@@ -10,7 +10,7 @@ nuestro cliente cuenta ya con un servidor interno que sirve como fuente de notic
 
 ### diagrama del laboratorio 
 
-![ laboratorio_dns ](  ".\imagenes_laboratorios\lab_dns.png"  "laboratorio_dns titulo")
+![ laboratorio_dns ](  /imagenes_laboratorios/lab_dns.png  "laboratorio_dns titulo")
 
 ## pasos a seguir 
 
