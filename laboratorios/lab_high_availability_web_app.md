@@ -6,7 +6,7 @@ cuando implementar una aplicacion web en multiples zonas de disponibilidad(AZ) c
 >ademas de estar utilizando servicios como Amazon CloudWatch para verificar el estado de la instancia, CloudFront para entrega de contenido y Targets junto con el Grupo de Auto Scaling
 
 ### Diagrama del laboratorio
-
+![ laboratorio_web_app ](  /imagenes_laboratorios/lab_high_availability_web.png  "laboratorio_dns titulo")
 ### pasos seguir
 
 #### paso 1
