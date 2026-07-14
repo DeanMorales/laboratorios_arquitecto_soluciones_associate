@@ -14,7 +14,7 @@ El departamento de TI de la ciudad está construyendo la infraestructura para el
 >basicamente el termino "serverless" no quiere decir que no haya servidor por detras, quiere decir que tu proveedor de servicios en la nube se encarga del mantenimiento, parcheo, escalado automatico. nos ayuda a reducir la operacion necesarita dejando al equipo de desarrollo con mayor tiempo en crear la solucion optima del proyecto 
 
 en este lab crearemos una funcion lambda que se encargue de recibir los comentarios desde el front, y llevarlos a la base de datos que podria estar almacenada en RDS, DynamoDB, etc...
-
+    
 ### AWS Lambda
 
  es un servicio totalmente adminsitrado de amazon, se encarga de procesa toda la adminstracion del servidor por detras, tu solo te encargar de escribir la funcion, puede activarse mediante *Triggers*
