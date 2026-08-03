@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Stack de prueba para MCP aws-iac-mcp-server - bucket S3 simple
+
+Resources:
+  TestMCPBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: Purpose
+          Value: mcp-test
+        - Key: CreatedBy
+          Value: aws-iac-mcp-server
+
+Outputs:
+  BucketName:
+    Description: Nombre del bucket S3 creado
+    Value: !Ref TestMCPBucket
+  BucketArn:
+    Description: ARN del bucket S3 creado
+    Value: !GetAtt TestMCPBucket.Arn
