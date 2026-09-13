@@ -11,10 +11,16 @@
     },
     "awslabs.aws-iac-mcp-server": {
       "disabled": false,
-      "timeout": 60,
+      "timeout": 60000,
       "type": "stdio",
       "command": "uv",
-      "args": ["tool", "run", "--from", "awslabs.aws-iac-mcp-server@latest", "awslabs.aws-iac-mcp-server.exe"],
+      "args": [
+        "tool",
+        "run",
+        "--from",
+        "awslabs.aws-iac-mcp-server@latest",
+        "awslabs.aws-iac-mcp-server.exe"
+      ],
       "env": {
         "FASTMCP_LOG_LEVEL": "ERROR",
         "AWS_PROFILE": "default",
