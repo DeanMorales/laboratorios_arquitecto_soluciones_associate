@@ -244,7 +244,7 @@ API Gateway cierra la brecha entre los clientes HTTP y las funciones de Lambda a
 - click en crear una nueva API 
 
 se nos muestran diferentes diferentes opciones para elegir de api, tenemos WebSocket API, Rest API y REST API Private.
-- selecciona REST API, 
+- **selecciona REST API** 
 
 como servicio complemtamente gestionado, maneja la complejidad operativa de ejecutar API de produccion a escala, la gestion de trafico distribuye las solicitudes entrantes de manera eficiente. los controles de autorizacion aseguran el acceso a sus recursos y el monitoreo proporciona visibilida en el rendimiento de la API, lo que le permite centrarse en la logica del negocio en lugar de infraestructura.
 
@@ -286,4 +286,50 @@ Mascotas
 
 ---
 
-ahora crearemos los Methods o metodos HTTP
+**ahora crearemos los Methods o metodos HTTP**
+
+debe surgir una notificacion de exito, yt revisa el mensaje, puedes cerrar la alerta. 
+
+en la seccion de Metodos, haz clic en **Crear Metodo**
+
+El ciclo de solicitud-respuesta en las API REST sigue un patron predecible: los clientes envias solicitudes HTTP a rutas de recursos especificias, su API procesa esas solicitudes y devuelve respuestas estructuradas como JSON, con codigos de estado apropiados. Este enfoque estandarizado hace que las API sean intuitivas para que los desarrolladores las consuman e integren en las aplicaciones. 
+
+---
+
+1. En Method type (Tipo de método), elija GET.
+2. En Integration type (Tipo de integración), seleccione Lambda function (Función Lambda)
+3. Active la integración de proxy de Lambda.
+4. Ve al siguiente paso.
+
+la integracion de proxy de lambda optimiza la conexion entre API Gateway y tu funcion lambda. cuando activas la integracion de proxy, API Gateway pasa la solicitudHTTP completa, incluidos los encabeazados, los parametros de consulta, las variables de ruta y el cuerpo, directamente a tu funcion como un objeto de evento estructurado, y tu funcion devuelve una respuesta formateada que API Gateway traduce de nuevo al clinete. 
+
+1. Para la función Lambda, revise para confirmar que la región de AWS us-east-1 esté seleccionada.
+2. En el siguiente cuadro de búsqueda, escriba:
+
+lab
+
+y elija el ARN labFunction.
+
+- Creó esta función Lambda en un paso anterior.
+
+3. Haga clic en Crear método.
+4. Vaya al siguiente paso.
+ 
+ el nombre de recurso de Amazon **ARN** de funcion Lambda identifica de forma exclusiva su funcion dentro de AWS. API Gateway usa este ARN para establecer el objetivo de integracion, configurando los permisos y el enrutmaient oencesarios para invocar su funcion especifica cuando llegan solicitudes al recursos /pets. 
+
+ Probar la inegracion entre API Gateway y Lambda valida que el fujo de solicitu-respuesta funciona correctamente antes de implementar la API para usuarios externos, las pruebas internas detectan errores de configuracion, problemas de permisos y problemas de formato de respuesta en un entrono controlado. 
+
+ 1. Debajo de eso, elija la pestaña Test.
+2. Haga clic en Test.
+3. Vaya al siguiente paso.
+
+La simulacion de prueba imita como las aplicaciones cliente interactuaran con su API implementeada,. API Gateway construye una solicitud http simulada, invoca su funcion Lambda con la ruta de recursos /pets y muestra el ciclo de respuesta completo, lo que demuestra la integracion de extremo a extremo que hemos configurado.
+
+1. Revisa los resultados.
+
+- En particular, observa los resultados en Status y Response body. El cuerpo de la respuesta podría tener un diseño diferente al del ejemplo de la captura de pantalla.
+
+2. Vaya al siguiente paso.
+
+La respuesta de Lambda incluye tres componentes  criticos: el codigo de estado (que indica exito o falla), los encabezados(que proporcionan metadatos sobre la respuesta), y el cuerpo (que contiene los datos reales.), revisar estos elementos confirma que su funcion devuelve respuestas correctamente formateadas que las aplicaciones cliente pueden analizar y mostrar. 
+
