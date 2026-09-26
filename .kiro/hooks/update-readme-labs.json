@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Actualizar README con Laboratorios",
+      "trigger": "UserPromptSubmit",
+      "description": "Hook que se activa al escribir 'actualiza el readme' en el chat para regenerar el README.md con índice de laboratorios, casos de uso, conceptos clave, servicios AWS e imágenes",
+      "matcher": "actualiza el readme|update readme",
+      "action": {
+        "type": "agent",
+        "prompt": "Por favor, actualiza el archivo README.md del proyecto con la siguiente estructura:\n\n1. **Título y resumen** de la ruta de certificación AWS Solutions Architect Associate\n\n2. **Índice de Laboratorios** con tabla que liste:\n   - Número de laboratorio\n   - Nombre del laboratorio\n   - Caso de uso\n   - Servicios AWS principales\n\n3. **Laboratorios Detallados** para cada uno de los 5 laboratorios:\n   - lab_api_restful.md → Laboratorio API Restful (imagen: lab_api_Restful.png)\n   - lab_automatizacion_cloudformation.md → Laboratorio CloudFormation (imagen: lab_cloudformation.png)\n   - lab_dns.md → Laboratorio DNS (imagen: lab_dns.png)\n   - lab_fund_serverless.md → Laboratorio Serverless (imagen: lab_lambda.png)\n   - lab_high_availability_web_app.md → Laboratorio Alta Disponibilidad (imagen: lab_high_availability_web.png)\n\n   Para cada laboratorio incluir:\n   - Caso de uso\n   - Descripción\n   - Servicios AWS utilizados\n   - Conceptos clave\n   - Imagen de referencia\n   - Recursos adicionales y documentación\n\n4. **Requisitos del Workshop**:\n   - Opción 1: Consola AWS\n   - Opción 2: Entorno Local\n   - Tabla de requisitos por laboratorio\n   - Recomendaciones generales\n   - Recursos adicionales\n\nExtrae información de los archivos markdown en /laboratorios/ para obtener casos de uso, conceptos clave y servicios. Mantén un formato profesional y bien estructurado con markdown."
+      }
+    }
+  ]
+}
