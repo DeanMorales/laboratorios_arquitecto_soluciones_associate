@@ -10,6 +10,12 @@ el equipo necesita una solucion para conectar la aplicacion de frontend a la bas
 - crear una API de API Gateway y una funcion Lambda.
 - Usa la integracion de proxy Lambdade API Gateway para la llamada a Lambda.
 
+
+## Diagrama del laboratorio
+
+![ lab_api_Restful ](  /imagenes_laboratorios/lab_api_Restful.png  "lab_api_Restful titulo")
+
+
 ## laboratorio
 ---
 ### Implementacion de API RESTful
@@ -244,7 +250,7 @@ API Gateway cierra la brecha entre los clientes HTTP y las funciones de Lambda a
 - click en crear una nueva API 
 
 se nos muestran diferentes diferentes opciones para elegir de api, tenemos WebSocket API, Rest API y REST API Private.
-- selecciona REST API, 
+- **selecciona REST API** 
 
 como servicio complemtamente gestionado, maneja la complejidad operativa de ejecutar API de produccion a escala, la gestion de trafico distribuye las solicitudes entrantes de manera eficiente. los controles de autorizacion aseguran el acceso a sus recursos y el monitoreo proporciona visibilida en el rendimiento de la API, lo que le permite centrarse en la logica del negocio en lugar de infraestructura.
 
@@ -286,4 +292,108 @@ Mascotas
 
 ---
 
-ahora crearemos los Methods o metodos HTTP
+**ahora crearemos los Methods o metodos HTTP**
+
+debe surgir una notificacion de exito, yt revisa el mensaje, puedes cerrar la alerta. 
+
+en la seccion de Metodos, haz clic en **Crear Metodo**
+
+El ciclo de solicitud-respuesta en las API REST sigue un patron predecible: los clientes envias solicitudes HTTP a rutas de recursos especificias, su API procesa esas solicitudes y devuelve respuestas estructuradas como JSON, con codigos de estado apropiados. Este enfoque estandarizado hace que las API sean intuitivas para que los desarrolladores las consuman e integren en las aplicaciones. 
+
+---
+
+1. En Method type (Tipo de método), elija GET.
+2. En Integration type (Tipo de integración), seleccione Lambda function (Función Lambda)
+3. Active la integración de proxy de Lambda.
+4. Ve al siguiente paso.
+
+la integracion de proxy de lambda optimiza la conexion entre API Gateway y tu funcion lambda. cuando activas la integracion de proxy, API Gateway pasa la solicitudHTTP completa, incluidos los encabeazados, los parametros de consulta, las variables de ruta y el cuerpo, directamente a tu funcion como un objeto de evento estructurado, y tu funcion devuelve una respuesta formateada que API Gateway traduce de nuevo al clinete. 
+
+1. Para la función Lambda, revise para confirmar que la región de AWS us-east-1 esté seleccionada.
+2. En el siguiente cuadro de búsqueda, escriba:
+
+lab
+
+y elija el ARN labFunction.
+
+- Creó esta función Lambda en un paso anterior.
+
+3. Haga clic en Crear método.
+4. Vaya al siguiente paso.
+ 
+ el nombre de recurso de Amazon **ARN** de funcion Lambda identifica de forma exclusiva su funcion dentro de AWS. API Gateway usa este ARN para establecer el objetivo de integracion, configurando los permisos y el enrutmaient oencesarios para invocar su funcion especifica cuando llegan solicitudes al recursos /pets. 
+
+ Probar la inegracion entre API Gateway y Lambda valida que el fujo de solicitu-respuesta funciona correctamente antes de implementar la API para usuarios externos, las pruebas internas detectan errores de configuracion, problemas de permisos y problemas de formato de respuesta en un entrono controlado. 
+
+ 1. Debajo de eso, elija la pestaña Test.
+2. Haga clic en Test.
+3. Vaya al siguiente paso.
+
+La simulacion de prueba imita como las aplicaciones cliente interactuaran con su API implementeada,. API Gateway construye una solicitud http simulada, invoca su funcion Lambda con la ruta de recursos /pets y muestra el ciclo de respuesta completo, lo que demuestra la integracion de extremo a extremo que hemos configurado.
+
+1. Revisa los resultados.
+
+- En particular, observa los resultados en Status y Response body. El cuerpo de la respuesta podría tener un diseño diferente al del ejemplo de la captura de pantalla.
+
+2. Vaya al siguiente paso.
+
+La respuesta de Lambda incluye tres componentes  criticos: el codigo de estado (que indica exito o falla), los encabezados(que proporcionan metadatos sobre la respuesta), y el cuerpo (que contiene los datos reales.), revisar estos elementos confirma que su funcion devuelve respuestas correctamente formateadas que las aplicaciones cliente pueden analizar y mostrar. 
+
+los recursos forman una estructura de arbol jerarquica que refleja la organizacion logica de su API. El recursos /pets que creó anteriormente representa una coleccion y ahora esta agregando un recursos secundario para representar elementos individuales dentro de esa coleccion, un patron comun en el diseño de API RESTful.
+
+- crearemos otros recursos dentro de pets. para citar /pets/{id}
+
+los parametros de reuta como {id}, crean rutas de recursos dinamicas que captan valores de variables de la URL. Cuando un cliente solicita /pets/3, API Gateway extrae el valro 3 y lo pasa a su funcion Lambda. que luego puede recuperar la mascota especifica con ese identificador. este parton admite API flexibles y basadas en datos sin requerir recursos separados para cada valor de ID posible. 
+- en nombre de recursos escriba {id}
+
+- vamos a lo siguiente. 
+
+Las solicitudes de metodo y las respuestas de metodo definen, el contrato completo apra cada operacion de API. La solicitud especifica los datos que la aplicacion cliente debe proporcionar (parametros de ruta, encabezados, cadenas de consulta o cuerpo), mientras que la respuesta define lo que el cliente debe esperar a cambio. este contrato ayuda a los desarrolladores de clientes a comprender como interactuar correctamente con su API. 
+
+en la **API: ApiLab** en Resources y en el metodo **GET** y {id} seleccionamos y seleccionamos **Create method**. 
+
+configurar la solicitud del metodo establece las reglas de validacion y requisitos de datos para las solciones entrantes. los parametros de cadena de consulta filtran los resultados, los encabezados proporcionan credenciales de autenticacion o preferencia de contenido, el cuerpo de la solicitud transporta datos para las operaciones que crean o modifican recursos. Definir estos elementos por adelantado ayuda a Api Gateway a validar las solicitudes antes de invocar tu funcion Lambda. 
+
+- para metood type elegimos GET.
+- integracion con Lambda funtion
+- prendemos *Lambda proxy integratio*
+- seleccionamos nuestra lambda 
+- clic en create method
+
+para finalizar podemos testear nuestro metodo en la seccion **Test** dentro del metodo {id}
+
+podemos ingresar en el path , el id , query strings y Headers.
+
+- en este caso solo agregamos un id 1 para verificar que funcione nuestro get por id de nuestro recurso pets. 
+
+el tiempo de ejecucione de Lambda convierte el objeto de respuesta de la funcion en formato JSON,  y lo devuelve a API Gateway. API Gateway luego construye una respuesta HTTP correctamente formateada. que incluye el codigo de estado, los encabezados y el cuerpo, y la entrega a la aplicacion clientes solicitante, completando el cciclo de solicitud- respuesta.
+
+---
+
+### Despiegue
+
+- en nuestro panel clic en deploy API 
+
+el despliegue de tu API la hace accesible fuera de la consola de API Gateway al generar una URL de invocacion publica. Hasta el despliegue, tu API existe solo como una configuracion dentro de API Gateway; el despliegue transforma esa configuracion en un punto final activo (endpoint) y seleccionable al que las aplicaciones cliente pueden acceder atraves de internet. 
+
+al desplegar podemos personalizar nuestra etapa, una etapa representa una instantanea con nombre de su API en un entorno especifico. Las etapas admiten multiples entornos de implementacion como desarrollo, pruebas y produccion. manteninedo configuraciones separadas. por lo que puede probar cambios en una etapa antes de promocionarlos a otra.
+
+**invoke link** 
+cada etapa genera una URL de invocacion unica que enruta las solicitudes a la version especifica de API implementada en esa etapa. puedes administrar la limitacion, almacenamiento en cache y registro de fomra independiente.
+
+---
+
+### prueba final
+
+en un navegador o modo incognito puedes pegar este endpoint, y agregar el recurso /pets la final para enviar una solicitud a nuestra API. 
+
+enviar una solicitud GET sin parametros a un recurso, debe recuperar la coleccion completa de elementos, como lo dicta el diseño de una API RESTful. 
+
+- agrega lab/pets/3
+
+agregar un id a la ruta del recursos. recupera un solo elemento especifico de la coleccion. este patron demuesta como las API RESTful usan la estructura de URL para expresar las relaciones de los recursos: la jerarquia de rutoas refleja la jerarquia de datos, lo que hace que las API sean intuitivas y predecibles para los desarrolladores. 
+
+---
+
+## Conclusiones. 
+
