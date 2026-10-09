@@ -1,77 +1,130 @@
-# laboratorio para implementar una API con una base de datos de DynamoDB
+# Laboratorio: API REST con DynamoDB
 
+## Caso de Uso
 
-## caso de uso 
+Retomando la aplicación web de alquiler de vehículos para visitantes, actualmente impulsada por una base de datos SQL relacional. Las pruebas de estrés revelan que la base de datos solo puede manejar un número limitado de usuarios concurrentes. El personal de TI busca una solución de base de datos escalable y rentable que pueda manejar altos volúmenes de tráfico sin requerir una inversión significativa en infraestructura.
 
-retomando el uso de una aplicacion web de alquiler de vehiculos para visitantes, actualmentes esta impulsada por una base de datos SQL relacional. las pruebas de estres revelan que la base de datos solo puede manejar un numero limitado de usuarios concurrentes. el personal de TI quiere una solucion de base de datos escalable y rentable que pueda manehar altos volumenes de trafico sin requerir una inversion significativa en infraestructura.
+---
 
-## objetivos
+## Objetivos
 
-- Crear una tabla en DynamoDB para almacenar datos de vehiculos.
-- Crear una funcion Lambda para guardar registros de DynamoDB.
-- Crear una REST API usando API Gateway
+- Crear una tabla en **DynamoDB** para almacenar datos de vehículos.
+- Crear una función **Lambda** para guardar registros en DynamoDB.
+- Crear una **REST API** usando **API Gateway**.
 
-## Arquitectura del laboratorio
+---
 
-## Conceptos claves
+## Arquitectura del Laboratorio
 
-- DynamoDB
-- API 
-- API Gateway
-- API REST
-- Microservicios
-- SQL vs NoSQL
+> *(Diagrama por agregar)*
 
-## Teoria 
+---
 
-migra la aplicacion a una arquitectura sin servidor utilizando Amazon DynamoDB para almacenamiento NoSQL escalable, AWS Lambda para computacion y Amazon API Gateway para manejar solicitudes de API.  
+## Conceptos Clave
 
-- la aplicacion envia una solicitudes HTTP que contiene una carga util en formato JSON al backend para su procesamiento
+| Concepto | Descripción breve |
+|---|---|
+| **DynamoDB** | Base de datos NoSQL totalmente administrada por AWS |
+| **API** | Interfaz de programación de aplicaciones |
+| **API Gateway** | Servicio para crear, publicar y gestionar APIs |
+| **API REST** | Estilo arquitectónico para servicios web stateless |
+| **Microservicios** | Arquitectura de componentes independientes y desacoplados |
+| **SQL vs NoSQL** | Bases de datos relacionales vs no relacionales |
 
-- Amazon API Gateway actua como el punto de entrada para que las apliaciones accedan a datos, logica de negocios o funcionalidad de servicios de backend, gestionando solicitudes de API a gran escalable Amazon API Gateway actual como el punto de entrada para que alas aplicaciones accedan a datos, logica de negocios o funcionalidad de servicios de backend, gestionando solicitudes de API a gran escala. Diirefencias entre SQL  y noSQL 
+---
 
-- Definicion de DynamoDB: (puedes agregar los beneficios diferentes de DynamoDB)
-- noSQL: son base de datos no relacionades, no llevan una estructura predefinida fija, son para casos de uso podria ser aplicacion de smartphone, web app y gaming,
+## Teoría
 
-adeas de sus principales beneficio para administrar grandes volumenes de datos, baja latencia, high performance. y flexibilidad en sus modelos de datos.
+### Arquitectura de la Solución
 
-- por que utilizar un esquema flexible? R= debido a la rapides y agilidad para desarrollar los documentos y definir las entidades, podemos agregar la informacion necesaria para cada uno de ellos
-- noSQL: son base de datos no relacionades, no llevan una estructura predefinida fija, son para casos de uso podria ser aplicacion de smartphone, web app y gaming,
+La solución migra la aplicación a una arquitectura serverless utilizando tres servicios principales:
 
-ademas de sus principales beneficio para administrar grandes volumenes de datos, baja latencia, high performance. y flexibilidad en sus modelos de datos.
+- **Amazon DynamoDB** — almacenamiento NoSQL escalable
+- **AWS Lambda** — cómputo sin servidores
+- **Amazon API Gateway** — punto de entrada para solicitudes HTTP
 
-por que utilizar un esquema flexible? R= debido a la rapides y agilidad para desarrollar los documentos y definir las entidades, podemos agregar la informacion necesaria para cada uno de ellos. 
+El flujo básico es:
 
-escalabilidad que brindan, el alto rendimiento. y su alta funcionalidad. 
+```
+Cliente → HTTP Request (JSON) → API Gateway → Lambda → DynamoDB
+```
 
-DynamoDB como servicio de base de datos sin servidor, no requiere servidores para aprovisionar, parchear o administrar, ni software para instalar y mantener u operar
+---
 
-## Query Examples
+### Amazon API Gateway
 
+Amazon API Gateway actúa como el punto de entrada para que las aplicaciones accedan a datos, lógica de negocios o funcionalidad de servicios de backend. Gestiona solicitudes de API a gran escala, incluyendo autenticación, throttling, caché y monitoreo.
 
-DynamoDB proporciona disponibilidad y tolerancia a fallos integradas en multiples zonas de disponibilidad, eliminando la necesidad de diseñar aplicaciones especificamente para estas capacidades.
+---
 
-**Descripcion de escaneos de Amazon DynamoDB** 
+### SQL vs NoSQL
 
-Un escaneo de DynamoDB lee todos los elementos de una tabla o de un indice secundario. 
-- primero se realiza un escaneo en todo la tabla, devolviendo asi los elementos escaneados 
-- despues seles puede aplicar un filtro, los filtros pueden tener comparaciones logicas para evaluar los elementos previamente escaneados 
-- third al final los elementos filtrados no representa mayor poder computacional, tendremos el atributo count final para todos los elementos que fueron mostrados despues del filtro con compador logico.
+| Característica | SQL (Relacional) | NoSQL (No relacional) |
+|---|---|---|
+| Esquema | Fijo y predefinido | Flexible y dinámico |
+| Escalabilidad | Vertical | Horizontal |
+| Consultas | SQL estándar | API propia por servicio |
+| Casos de uso | Transacciones complejas | Apps móviles, web, gaming |
 
+---
 
-## Conceptos
-en este laboratorio de practica, podra: 
-- Crear una tabla de Amazon DynamoDB.
-- second definir el esquema de una tabla
-- third crear una funcion Lambda para crear, actualizar y consultar los elementos de la tabla. 
-- exponer una API RESTful de Amazon API Gateway a la funcion Lambda.
+### Amazon DynamoDB
 
-----------
-## laboratorio
-se utilizara un archivo de ejemplo escrito en python par aconectar nuestra tabla a la API
-> se abordara de maenera muy general pues son 48 pasos. para los puntos importantes. 
->> recordando que configuraciones son escensiales. 
+**Definición**: DynamoDB es una base de datos NoSQL totalmente administrada por AWS, diseñada para aplicaciones que requieren baja latencia a cualquier escala.
 
+**Principales beneficios**:
 
+- **Sin servidores**: no requiere aprovisionar, parchear ni administrar servidores, ni instalar software.
+- **Alto rendimiento**: latencia en milisegundos de un solo dígito.
+- **Escalabilidad automática**: maneja grandes volúmenes de datos sin intervención manual.
+- **Alta disponibilidad**: disponibilidad y tolerancia a fallos integradas en múltiples zonas de disponibilidad (AZ), sin necesidad de diseñar esa lógica en la aplicación.
+- **Flexibilidad de esquema**: permite agregar atributos a los ítems de forma independiente, agilizando el desarrollo.
 
+---
 
+### Escaneos en DynamoDB
+
+Un escaneo (`Scan`) lee todos los elementos de una tabla o de un índice secundario. El proceso ocurre en tres etapas:
+
+1. **Escaneo completo**: se recorre toda la tabla y se devuelven todos los elementos encontrados.
+2. **Aplicación de filtros**: se aplica una expresión de filtro con comparaciones lógicas sobre los elementos escaneados.
+3. **Resultado final**: el atributo `Count` refleja el número de elementos devueltos después del filtro.
+
+> ⚠️ Los filtros no reducen el costo del escaneo: DynamoDB cobra por los elementos leídos **antes** de aplicar el filtro, no por los elementos devueltos.
+
+---
+
+## Práctica: Pasos del Laboratorio
+
+En este laboratorio podrás:
+
+1. Crear una tabla de Amazon DynamoDB.
+2. Definir el esquema de la tabla (clave de partición y clave de ordenación).
+3. Crear una función Lambda para **crear**, **actualizar** y **consultar** elementos de la tabla.
+4. Exponer la función Lambda como una API RESTful mediante Amazon API Gateway.
+
+---
+
+## Laboratorio
+
+Se utilizará un archivo de ejemplo escrito en **Python** para conectar la tabla DynamoDB a la API.
+
+> El laboratorio consta de **48 pasos**; a continuación se destacan los puntos y configuraciones esenciales.
+
+### Configuraciones esenciales a recordar
+
+- Definir correctamente la **clave de partición** (`Partition Key`) al crear la tabla en DynamoDB.
+- Asignar un **rol de ejecución IAM** a la función Lambda con permisos sobre DynamoDB.
+- Configurar la **integración Lambda proxy** en API Gateway para pasar el evento HTTP directamente a la función.
+- Realizar el **deploy del API** a un stage antes de probarlo.
+- Habilitar **CloudWatch Logs** en API Gateway para facilitar el debugging.
+
+---
+
+## Recursos Adicionales
+
+- [Documentación de Amazon DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html)
+- [Documentación de AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html)
+- [Documentación de Amazon API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html)
+- [Integración Lambda con API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-lambda-function-handler.html)
+- [DynamoDB: operaciones Scan](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html)
