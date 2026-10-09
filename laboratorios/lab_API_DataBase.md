@@ -94,6 +94,23 @@ Un escaneo (`Scan`) lee todos los elementos de una tabla o de un índice secunda
 
 ---
 
+## Laboratorio
+
+Se utilizará un archivo de ejemplo escrito en **Python** para conectar la tabla DynamoDB a la API.
+
+> El laboratorio consta de **48 pasos**; a continuación se destacan los puntos y configuraciones esenciales.
+
+### Configuraciones esenciales a recordar
+
+- Definir correctamente la **clave de partición** (`Partition Key`) al crear la tabla en DynamoDB.
+- Asignar un **rol de ejecución IAM** a la función Lambda con permisos sobre DynamoDB.
+- Configurar la **integración Lambda proxy** en API Gateway para pasar el evento HTTP directamente a la función.
+- Realizar el **deploy del API** a un stage antes de probarlo.
+- Habilitar **CloudWatch Logs** en API Gateway para facilitar el debugging.
+
+
+
+
 ## Práctica: Pasos del Laboratorio
 
 En este laboratorio podrás:
@@ -167,25 +184,63 @@ de esta menera checamos el codigo y analizamos como maneja estas llamadas a la b
 
 ### creacion de la API Gateway
 
+ una parte fundamental es el servicio de API Gateway, pues ofrece 3 tipos de API la de tipo HTTP, API REST y API Websocket. admiten patrones RESTful y con metodos HTTP estandar (GET, POST, PUT, PATCH, DELETE) para la comunicacion cliente-servidor sin estado.
 
+- selecicona la tarjeta de  REST API.
+  - New API
+  - APIname : rental_app
+  - description -optional 
+  - Security policy: TLS_1_0
+  - click en create API.
+
+  
+#### creacion de recursos 
+los recursos representan segmentos de la ruta URL en la estructura de una API y sirven como contenedores para los metodos HTTP. los recurrsos se pueden anidar para crear estructuras gerarquicas como /locations/{id}/vehicles.
+
+> investigar los CORS Cross-Origin Resource Sharing es un mecanismo de seguridad del navegador que controla si las aplicaciones web de un dominio pueden acceder a recursos de un dominio diferente. las API a las que acceden las aplicaciones basadas en navegador tipicamente requieren la configuracion de CORS para especificar que origenes pueden hacer solicitudes.
+
+creamos el recursos:
+- resource path: / 
+- resource name: locations 
+-click en crear recursos. 
+
+dentro de el  recurso location definiremos los meotodos:
+- meotod GET: 
+- tipo de integracion con Lambda. 
+- turn on: lambda proxy integration.
+
+- seleccionamos la funcion lambda que creamos en un inicio. 
+- integration timeout.
+
+la integracion de timeout tiene una duracion maxima de 29000 ms , 29 sec pues los sistemas que necesitan mayor tiempo deben migrar a una arquitectura o patrones asincronicos con mecanismos de devolucion de llamada.
+
+como resultado debemos ver el methodo creado GET justo debajo de /locations
+
+como en lambda tambien tenemos la forma de testear nuestra API por medio de la pesatañ **test**. podemos ingresar un **headers**  y click en test. 
+analizamos el test. 
+
+un status 200 indica que son exitosas. los codigos 400 indican problemas de solicitud no validas , y los errores 500 son para errores internos del b backend como no disponibilidad del serivico. 
+---rental_app
+
+sigamos creando el metodo POST con los mismos pasos. incluye test con el siguiente request body: 
+
+```Python  
+{
+  "name": "viper roller coaster",
+  "vehicles_available": 5
+}
+```
+
+testeamos y nos debe dar un status de 201 como resultado exitoso. 
+volvemos a nuestro dynamos y hacemos un scaneo para ver los elementos en la tabla. y debe estar ingresado ese elemto nuevo. 
+
+
+- por ultimo deployamos nuestra API  por medio de la implemetnacion de API. definimos el Stage y su nombre de **Test** 
 
 
 ---
+## DIY 
 
-
-## Laboratorio
-
-Se utilizará un archivo de ejemplo escrito en **Python** para conectar la tabla DynamoDB a la API.
-
-> El laboratorio consta de **48 pasos**; a continuación se destacan los puntos y configuraciones esenciales.
-
-### Configuraciones esenciales a recordar
-
-- Definir correctamente la **clave de partición** (`Partition Key`) al crear la tabla en DynamoDB.
-- Asignar un **rol de ejecución IAM** a la función Lambda con permisos sobre DynamoDB.
-- Configurar la **integración Lambda proxy** en API Gateway para pasar el evento HTTP directamente a la función.
-- Realizar el **deploy del API** a un stage antes de probarlo.
-- Habilitar **CloudWatch Logs** en API Gateway para facilitar el debugging.
 
 
 ---
