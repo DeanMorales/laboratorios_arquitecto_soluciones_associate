@@ -24,6 +24,7 @@ API Gateway se integra con AWS Lambda para procesar solicitudes y conectar el fr
 
 ## arquitectura del laboratorio 
 
+![Imagen Arquitectura](/imagenes_laboratorios/lab_api_Restful.png "error")
 
 ### que haremos ?
 
