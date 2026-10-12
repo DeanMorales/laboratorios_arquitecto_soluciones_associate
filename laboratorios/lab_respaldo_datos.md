@@ -17,7 +17,7 @@ Una empresa de consultoría de marketing utiliza múltiples scripts personalizad
 
 ## Arquitectura del Laboratorio
 
-> 🖼️ *(Imagen de arquitectura pendiente de agregar)*
+![ laboratorio_respaldos_datos ](  /imagenes_laboratorios/lab_respaldos_datos.png  "laboratorio_respaldos_datos")
 
 ---
 
