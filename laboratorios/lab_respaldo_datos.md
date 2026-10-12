@@ -1,170 +1,285 @@
-# Laboratorio de respaldos automatizados con EBS y AWS Backup 
+# Laboratorio: Respaldos Automatizados con EBS y AWS Backup
+
 ---
-## caso de uso 
 
-una empresa de consultoria de marketing actualmente utiliza multiples scripts personalizados para acer copias de seguriad de sus aplicaciones, para estos scripts se estan volviendo cada vez mas dificiles de mantener. la empresa necesita hacer copias de seguridad de su almacenamiento de host bastion, almacenamiento de servidor web centralizado y snapshots de base de datos de diferentes servicios de AWS. Quieren una solucion de copia de seguridad unifacda y automatizada que agilice la gestion y proporcione una proteccion de datos consistente. 
+## Caso de Uso
 
-## objetivos de aprendizaje
+Una empresa de consultoría de marketing utiliza múltiples scripts personalizados para realizar copias de seguridad de sus aplicaciones. Estos scripts se están volviendo cada vez más difíciles de mantener. La empresa necesita hacer copias de seguridad de su almacenamiento de host bastión, almacenamiento de servidor web centralizado y snapshots de base de datos de diferentes servicios de AWS. Buscan una solución de copia de seguridad unificada y automatizada que agilice la gestión y proporcione una protección de datos consistente.
 
-- Cree un plan de respaldo para los volumenes de Amazon EBS mediante etiquetas.
+---
+
+## Objetivos de Aprendizaje
+
+- Crear un plan de respaldo para los volúmenes de Amazon EBS mediante etiquetas.
 - Realizar un respaldo bajo demanda.
----
-### respaldos de datos con AWS Backup
 
-> vamos a utilizar AWS Backup para centralizar y automatizar la proteccion de datos en todos los servicios de AWS.
-eliminando la necesidad de scrpts personalizados y procesos de respaldo manuales. 
-
-**Descripcion de AWS backuo**
-
-AWS Backup es un servicio administrado por Amazon, por lo que no debes preocuparte por el escalado de tus copias de seguridad.
-ofrece un serivicio totalmente adminsitrado basado en politicas de AWS. 
-
-
-- actualmente AWS Backup cubre servicios como:
-  - Amazon EBS (elastic Block store)
-  - Amazon EFS (Elastic File System)
-  - Amazon FSx.
-  - Amazon EC2(Elastic Compute Cloud).
-  - Amazon RDS.
-  - Amazon DynamoDB
-
-  ofreces proteccion de datos de manera centralizada y automatizada, asi como brinda soporte para las regulaciones de cumplimiento o piliticas empresariales. para la proteccion de datos. junto con AWS Organizations permite deployar diferentes politicas de proteccion de datos para configurar, administrar y governar sus cuentas y con ellas los recursos y servicios que estan tengan.
-  **Benefits** 
-
-  - Centralized Management: mediante la AWS CLI, Console y APIs. de manera rapida y simple puedes configurar politicas de respaldo. aseguranto los recursos atravez de la cuenta y proteger en caso necesario de un backup, restore y retention. 
-  - Process automation: basado en politicas y de manera automatizada. la retencion de mgmt, calendarizar los backup y el ciclo de vida de la administrarcion eliminando los scripts personalizados.salvando tiempo y dinero. 
-  - impeocws compliance: enforce encrypt audit compliance. de manera que diseñes una estrategia para alinaer los procesos de la empresa con los requerimientos de cumplimiento. 
-
-- en esta solucion, AWS Backup crea copias de seguridad de los volumenes de Amazon EBS adjuntos a varias instancias EC2.
-
--para los volumenes de Amazon EBS, esta solucion utiliza un almacen de respaldo, que es un contenedor que almacena y organiza respaldos con politicas de acceso y encriptacion. 
-- un plan de respaldo define cuando y como hacercopias de seguridad de los rescursos de AWS, incluyendo la frecuencia de respaldos, los periodos de retencio y las politicas de ciclo de vida. se pueden crear multiples planes de respaldo para diferentes requisitos de reslpaldo. 
-- los recursos se asignan a un plan de respaldo usando etiquetas o ID de recursos y AWS Backup automaticamente los respalda de acuerdo con el calendario y las reglas de retencion del plan. 
 ---
 
-### AWS KMS 
+## Arquitectura del Laboratorio
 
-cada boveda de respaldo requiere una clave de encriptacion de AWS Key Management Service (AWS KMS) para encriptar toos los respaldos almacenados dentro de la boveda, proporcionando seguridad de datos en reposo.
+> 🖼️ *(Imagen de arquitectura pendiente de agregar)*
 
-Descripcion de AWS KMS
+---
 
-es un servicio administrado por AWS. facilita la administracion de cifrado de datos y controla el uso del cifrado en una amplia gama de AWS. como S3, EC2 etc. es un servicio, puede generar las keys en KMS o importarlas desde su infraestructura de administracion de claves. 
- KMS trabaja bajo la FIPS 140-2 que le permite validar, aislar y proteger 
+## Conceptos Clave
 
-- puedes utilizar KMS para encriptar o desencriptar tu servicios, tambien tus recursos de AWS pueden utilizar tus llaves (keys) para proteger tu informacion 
-- otra caracteristica importante es que las llaves de KMS nunca dejan el la boveda por lo que siempre tendras acceso para administrarlas y darles mantenimiento en un solo sitio. 
-- puedes crear politicas de uso, estoy quiere decir que podemos determinar el acceso a los usuarios y a que recursos pueden acceder estos, como pueden aplicar las llaves de manera personalizada. 
+| Concepto | Descripción |
+|---|---|
+| **AWS Backup** | Servicio administrado que centraliza y automatiza la protección de datos en todos los servicios de AWS |
+| **Backup Vault (Bóveda de respaldo)** | Contenedor que almacena y organiza los respaldos, con políticas de acceso y cifrado propias |
+| **Backup Plan (Plan de respaldo)** | Política que define cuándo y cómo se respaldan los recursos: frecuencia, retención y ciclo de vida |
+| **Resource Assignment** | Mecanismo para vincular recursos (por ID o etiqueta) a un plan de respaldo |
+| **On-Demand Backup** | Respaldo manual e inmediato, fuera del calendario programado |
+| **Amazon EBS** | Elastic Block Store; almacenamiento en bloque persistente para instancias EC2 |
+| **Snapshot** | Copia puntual de un volumen EBS almacenada en S3 (gestionada por AWS) |
+| **AWS KMS** | Key Management Service; servicio administrado para crear y controlar claves de cifrado |
+| **CMK** | Customer Managed Key; clave de cifrado creada y administrada por el cliente en KMS |
+| **Etiqueta (Tag)** | Par clave-valor que se puede asignar a recursos de AWS para clasificarlos y aplicarles políticas |
+| **RTO / RPO** | Recovery Time Objective (tiempo máximo de recuperación) y Recovery Point Objective (pérdida máxima de datos aceptable) |
+| **Crash-consistent backup** | Copia de seguridad coherente en caso de fallo; captura todos los volúmenes de una instancia en el mismo instante |
 
-- todas las llamadas al servicio de KMS  se almacenan en forma de logs en **AWS CloudTrail** por motivos de seguimiento y auditoria. 
+---
 
-**beneficios**
+## Teoría
 
-- amazon se encarga de la seguridad fisica, la durabilidad, refuerso por politicas y a demas de estar siempre disponibles 
+### Respaldos de Datos con AWS Backup
 
-- encriptar y datos firmados de forma digital. integra encripcion por medio de la SDK, usa llaves para encriptar las aplicaciones y usa APIs para contruir la encriptacion en sus APIs.
-- ademas de incorportar la firma digital con llaves asimetricas para asegurar la integridad de la informacion. 
+AWS Backup permite centralizar y automatizar la protección de datos en todos los servicios de AWS, eliminando la necesidad de scripts personalizados y procesos de respaldo manuales.
 
-- Compliance and Control.- AWS KMS utilizar varios controles de calidad y segurida validados como PCI DDS,FIPS HIPAA ETC. 
-- instancias DE HSM 
+**Descripción de AWS Backup**
 
-> para respaldar una base de datos de Amazon Aurora. esta solucion utiliza el almacen de respaldo predeterminado que AWS Backup Crea automaticamente para cada cuenta de AWS. 
+AWS Backup es un servicio totalmente administrado por Amazon, basado en políticas, por lo que no es necesario preocuparse por el escalado de las copias de seguridad.
 
+Actualmente, AWS Backup cubre los siguientes servicios:
+
+- Amazon EBS (Elastic Block Store)
+- Amazon EFS (Elastic File System)
+- Amazon FSx
+- Amazon EC2 (Elastic Compute Cloud)
+- Amazon RDS
+- Amazon DynamoDB
+- Amazon Aurora
+- Amazon S3
+
+Ofrece protección de datos centralizada y automatizada, y brinda soporte para regulaciones de cumplimiento y políticas empresariales. Junto con AWS Organizations, permite desplegar diferentes políticas de protección de datos para configurar, administrar y gobernar múltiples cuentas y sus recursos.
+
+**Beneficios principales**
+
+| Beneficio | Descripción |
+|---|---|
+| **Centralización** | Mediante la consola, AWS CLI y APIs, puedes configurar políticas de respaldo de forma rápida y simple, asegurando recursos a través de toda la cuenta |
+| **Automatización de procesos** | Basado en políticas: programa respaldos, gestiona la retención y el ciclo de vida automáticamente, eliminando scripts personalizados y reduciendo costos operativos |
+| **Cumplimiento (Compliance)** | Aplica cifrado, auditoría y control de acceso; permite diseñar una estrategia alineada con los requerimientos regulatorios (HIPAA, PCI DSS, etc.) |
+| **Integración con Organizations** | Permite gobernar las políticas de backup a nivel de organización completa desde una sola cuenta de gestión |
+
+**Componentes clave de AWS Backup**
+
+- **Bóveda de respaldo (Backup Vault)**: contenedor que almacena y organiza los respaldos. Tiene su propia política de acceso y clave de cifrado KMS.
+- **Plan de respaldo (Backup Plan)**: define cuándo y cómo se realizan las copias de seguridad, incluyendo la frecuencia, los períodos de retención y las políticas de ciclo de vida. Se pueden crear múltiples planes para distintos requisitos.
+- **Asignación de recursos**: los recursos se vinculan a un plan de respaldo usando etiquetas o IDs de recursos. AWS Backup los respalda automáticamente de acuerdo con el calendario y las reglas de retención del plan.
+
+---
+
+### AWS KMS (Key Management Service)
+
+Cada bóveda de respaldo requiere una clave de cifrado de AWS KMS para cifrar todos los respaldos almacenados dentro de ella, proporcionando seguridad de los datos en reposo.
+
+**Descripción de AWS KMS**
+
+AWS KMS es un servicio administrado por AWS que facilita la administración del cifrado de datos y controla el uso de claves criptográficas en una amplia gama de servicios de AWS (S3, EC2, RDS, EBS, etc.). Las claves pueden generarse en KMS o importarse desde una infraestructura de administración de claves externa.
+
+KMS opera bajo el estándar **FIPS 140-2**, que permite validar, aislar y proteger los módulos criptográficos.
+
+**Características principales**:
+
+- Puedes utilizar KMS para cifrar y descifrar datos en tus servicios; los recursos de AWS pueden usar tus claves para proteger la información almacenada.
+- Las claves de KMS **nunca salen de la bóveda de KMS**, por lo que siempre tendrás acceso centralizado para administrarlas y darles mantenimiento en un solo lugar.
+- Puedes crear políticas de uso de claves (Key Policies), lo que permite determinar qué usuarios y servicios tienen acceso a cada clave y cómo pueden utilizarla.
+- Todas las llamadas al servicio de KMS se registran como logs en **AWS CloudTrail** para seguimiento y auditoría.
+
+**Beneficios**
+
+| Beneficio | Descripción |
+|---|---|
+| **Seguridad física** | AWS gestiona la seguridad física, la durabilidad y el refuerzo por políticas de los módulos HSM |
+| **Cifrado y firma digital** | Integra cifrado mediante el SDK de AWS; usa claves asimétricas para firma digital y garantiza la integridad de la información |
+| **Cumplimiento** | AWS KMS está validado bajo múltiples estándares: PCI DSS, FIPS 140-2, HIPAA y otros marcos regulatorios |
+| **Instancias HSM** | Utiliza módulos de seguridad de hardware (HSM) dedicados para el almacenamiento seguro de claves |
+
+> Para respaldar una base de datos de Amazon Aurora, esta solución utiliza el almacén de respaldo predeterminado que AWS Backup crea automáticamente para cada cuenta de AWS.
+
+---
 
 ## Laboratorio
 
-### Respaldo de datos. utilizando Backup
+### Respaldo de Datos con AWS Backup
 
-- crearemos una boveda de respaldo personalizada 
-- configure una copia de seguridad bajo demanda de los volumenes deeee Amazon EBS adjuntos a Amazon EC2 con un ID de recurso.
-- Crea planes de respaldo automatizados para volumenes de EBS usando etiquetas.
+En este laboratorio realizaremos las siguientes acciones:
 
-#### pasos 
+- Crear una bóveda de respaldo personalizada.
+- Configurar una copia de seguridad bajo demanda de los volúmenes de Amazon EBS adjuntos a instancias EC2, usando el ID del recurso.
+- Crear planes de respaldo automatizados para volúmenes de EBS usando etiquetas.
 
-1. Nos dirigimos a EC2 para revisar nuestras instancias actuales, seleccionamos a la que queramos realizar el backup. 
-  entonces ingresamos a la configuracion de la instancia y en la parte de etiquetas o tags, debemos actualizar la informacion
-  - en el panel de configuracion de el almacenamiento de la instancia verificamos el disco EBS al que esta conectado la instancia. 
-  -copiamos el volumen ID de la instancia 
+---
 
-  "vol-0gf0d987fg09d7h" device name "/dev/xvda" por ejemplo. 
-2. nos dirigimos a la seccion **Elastic Blcok Store** y seleccionamos nuestro volumen que recien copiamos su ID.
-  - dentro de sus configuracion debe estar **tags**  y damos clic en administrar 
-  - por ulitmo le agregamos una tag para utilizarla al momento de realizar el backup. 
-   por ejemplo (key: Backup, Value: True) y click en save. 
+### Paso 1: Revisar las instancias EC2 y etiquetar el volumen EBS
 
-3. regresamos a nuestra instancia y de igual manera le agregamos el **tag** corespondiente.
+Nos dirigimos al servicio **EC2** en la consola de AWS para revisar las instancias actuales. Seleccionamos la instancia a la que deseamos realizar el backup.
 
-4. repetimos la etiquetas para Bastion_host para agrupar todos nuestros recursos de la app para hacerles el backup. 
+1. En la configuración de la instancia, revisamos la pestaña de **Storage** para identificar el volumen EBS conectado.
+2. Copiamos el **Volume ID** del volumen asociado (por ejemplo: `vol-0gf0d987fg09d7h`, device name `/dev/xvda`).
 
-##### AWS Backup
+---
 
-1. nos dirigimos a AWS backup para crear el plan 
-  - nos dirigimos a la seccion de vaules **Vaults**  y creamos uno nuevo con las siguientes especificaciones. 
-   - nombre: any_company_backup
-   - vault type: podremos elegir Backup Vault 
-   - encrytion key: seleccionamos en la lista desplegable default AWS/backup
-   - click en crear un vaul. 
+### Paso 2: Agregar etiqueta al volumen EBS
 
-2. Protected Resources
-> la pagina protected resources muestra los recursos de AWS que AWS Backup ha respaldado al menos una vez. Los recursos asignados a planes de respaldo pero que aun o se han respaldado no apareceran hasta que se complete su primer trabajo de respaldo programado o bajo demanda. 
+Nos dirigimos a la sección **Elastic Block Store → Volumes** y seleccionamos el volumen cuyo ID copiamos anteriormente.
 
-- debemos crear un respaldo bajo demanda para este laboratorio. 
-- seleccionamos los settings :
-  - para Resources type: EBS con su corespondiente id. 
-  - Backup Window: Create backup now.
-  - Total retention period: 7 days.
+1. Dentro de su configuración, abrimos la pestaña **Tags** y hacemos clic en **Manage tags**.
+2. Agregamos la siguiente etiqueta y hacemos clic en **Save**:
 
-AWS Backup se integra con AWS indentity and Access Management IAM para controlar las operaciones de Backup. los roles de IAM definen los permisos que AWS backup necesita para accederrrrrrr y proteger los recursos en su entorno de AWS. 
+| Key | Value |
+|---|---|
+| `Backup` | `True` |
 
-- para la boveda de respaldo elija : any_company_backup
-- rol de IAM: seleccionamos el rol en etes caso **backup_rol** 
-- finalmente click e ncrear on-demand backup.
+---
 
->backup creara copias de seguridad coherentes en caso de bloqueo de los volumenes de EBS, conectados a las instnacias de EC2 de forma predeterminada. la coherencia en caso de bloqueo significa que las instantaneas de todos los volumenes conectados a la misma instancia se acpturan en el mismo momento, lo que ayuda a mantener la integridad de los datos en cofiguraciones de varios volumenes. 
+### Paso 3: Agregar etiqueta a la instancia EC2
 
-- el proceso de backup tarda al rededor de 5-6 minutos.
-3. Creacion de un backup plan
-dentro de las opciones de AWS backup nos encontramos a los planes de respaldo. podemos crean un plan perzonaliado. 
+Regresamos a nuestra instancia EC2 y le agregamos la misma etiqueta (`Backup: True`) para agruparla con sus volúmenes y facilitar la asignación al plan de respaldo.
 
-> un plan de respaldo es una expresion de politica que define horarios de respaldo, periodos de retencion y reglas de ciclo de vida para los recursos de AWS. Los planes de respaldo automatizan la proteccion en varios recursos y tipos de recursos, como tablas de Amazon DynamoDB, sistemas de archivos de Amazon Elastic File System y volumenes de Amazon EBS.
+---
 
-- selecciona **build a new plan** y con un nombre de preferencia any_company_backup_plan  
-- dentro de la configuracion de reglas.definamos una regla nueva.
-  - name: backup_rule
-  - backup vault: any_company_backup
-  - backup frecuncy: weekly - sun 
-  - start time: default
-  - click en create plan
+### Paso 4: Etiquetar el Bastion Host
 
-> las ventanas de backup definen cuando pueden iniciarse los trabajos de backup. la configuracion predetermianda inicia los backups dentro de una ventana de 8hrs a partir de las 5:00 am UTC, con un requisito de finalizacion dentro de las 8 horas posteriores de su hora de inicio. 
+Repetimos el proceso de etiquetado para la instancia **Bastion Host**, con el objetivo de agrupar todos los recursos de la aplicación y respaldarlos de forma conjunta.
 
-> las asignaciones de recursos conectan los planes de respaldo a recursos especificos de AWS. Cada asignacion requiere un rol de IAM que otorgue a AWS backup los permisos necesarios para realizar operaciones de respaldo en los recursos asignados. 
+---
 
-4. **Assign resources** 
-geral definimos un nombre 
+### Paso 5: Crear la Bóveda de Respaldo en AWS Backup
 
-- tagged:resources
-- IAM role: choose an IAM role
-- backup_role 
-- Define resource section: include all resource type
-- Refine seleccion using tags - proporcionando
-  - key: backup 
-  - condition: equals 
-  - value: True
-- clikc en asignar recursos 
+Nos dirigimos al servicio **AWS Backup** en la consola. Abrimos la sección **Vaults** y creamos una nueva bóveda con los siguientes parámetros:
 
->ten en cuenta que las etiquetas distinguen mayusculas y minusculas. 
-como salida final nos dice una especificaciones
+| Parámetro | Valor |
+|---|---|
+| Nombre | `any_company_backup` |
+| Vault type | Backup Vault |
+| Encryption key | `Default (aws/backup)` |
 
-"seleccionando todos los recursos, protege todos los recursos de tu cuenta, tu seleccion actual podria respaldar varios de ellos e incurrir en implicaciones de costos."
+Hacemos clic en **Create vault**.
 
-aceptamos y seguimos. 
+---
 
-5. **Jobs** 
->los trabajos de backup representan operacioens de backup individuales. la pagina Trabajos muestra el estado de todas las operaciones de backup y restauracion, incluyendo backups a pedido y ejecuciones de planes de backups programados 
+### Paso 6: Crear un Respaldo Bajo Demanda
 
-- como podemos ver el ultimo trabajo que hicimos como completado. con su propio individuales
-- nos vamos a los recursos protegidos **protected resources** 
-podremos ver el volumen que respaldamos anteriormente del tipo EBS. damos click sobre el. 
+Nos dirigimos a **Protected Resources**.
 
-> las organizaciones suelen crear varios planes de respaldo para abordar diferentes objetivos de recuperacion en las cargas de trabajo; por ejemplo, las bases de datos de produccion podrian requerir respaldos diarios con una retencion de 30 dias, mientras que los recursos de desarrollo solo necesitan respaldos semanales de 7 dias . 
+> La página **Protected Resources** muestra los recursos de AWS que AWS Backup ha respaldado al menos una vez. Los recursos asignados a planes de respaldo que aún no han sido respaldados no aparecerán hasta que se complete su primer trabajo de respaldo programado o bajo demanda.
 
+Creamos un respaldo bajo demanda con los siguientes parámetros:
+
+| Parámetro | Valor |
+|---|---|
+| Resource type | EBS |
+| Resource ID | *(ID del volumen copiado anteriormente)* |
+| Backup window | Create backup now |
+| Total retention period | 7 days |
+| Backup vault | `any_company_backup` |
+| IAM role | `backup_role` |
+
+Hacemos clic en **Create on-demand backup**.
+
+> AWS Backup crea copias de seguridad **coherentes en caso de bloqueo** (*crash-consistent*) de los volúmenes de EBS conectados a instancias EC2 de forma predeterminada. Esto significa que las instantáneas de todos los volúmenes conectados a la misma instancia se capturan en el mismo momento, lo que ayuda a mantener la integridad de los datos en configuraciones de múltiples volúmenes.
+
+> AWS Backup se integra con **AWS Identity and Access Management (IAM)** para controlar las operaciones de backup. Los roles de IAM definen los permisos que AWS Backup necesita para acceder y proteger los recursos en el entorno de AWS.
+
+El proceso de backup tarda aproximadamente **5 a 6 minutos**.
+
+---
+
+### Paso 7: Crear un Plan de Respaldo Automatizado
+
+Dentro de las opciones de AWS Backup, accedemos a **Backup plans** y creamos un plan personalizado.
+
+> Un plan de respaldo es una expresión de política que define horarios de respaldo, períodos de retención y reglas de ciclo de vida para los recursos de AWS. Los planes automatizan la protección en varios recursos y tipos de recursos, como tablas de Amazon DynamoDB, sistemas de archivos de Amazon EFS y volúmenes de Amazon EBS.
+
+Seleccionamos **Build a new plan** y configuramos:
+
+| Parámetro | Valor |
+|---|---|
+| Plan name | `any_company_backup_plan` |
+
+**Configuración de la regla de respaldo**:
+
+| Parámetro | Valor |
+|---|---|
+| Rule name | `backup_rule` |
+| Backup vault | `any_company_backup` |
+| Backup frequency | Weekly — Sunday |
+| Start time | Default |
+
+Hacemos clic en **Create plan**.
+
+> Las **ventanas de backup** definen cuándo pueden iniciarse los trabajos de respaldo. La configuración predeterminada inicia los backups dentro de una ventana de 8 horas a partir de las 5:00 AM UTC, con un requisito de finalización dentro de las 8 horas posteriores a su hora de inicio.
+
+---
+
+### Paso 8: Asignar Recursos al Plan
+
+> Las **asignaciones de recursos** conectan los planes de respaldo a recursos específicos de AWS. Cada asignación requiere un rol de IAM que otorgue a AWS Backup los permisos necesarios para realizar operaciones de respaldo en los recursos asignados.
+
+Configuramos la asignación con los siguientes parámetros:
+
+| Parámetro | Valor |
+|---|---|
+| Assignment name | *(nombre de preferencia)* |
+| IAM role | `backup_role` |
+| Resource selection | Tagged resources |
+| Include all resource types | ✅ Activado |
+
+**Definir selección por etiquetas**:
+
+| Key | Condition | Value |
+|---|---|---|
+| `Backup` | Equals | `True` |
+
+Hacemos clic en **Assign resources**.
+
+> ⚠️ Ten en cuenta que las etiquetas **distinguen mayúsculas y minúsculas**. Asegúrate de que el valor `True` coincida exactamente con el que asignaste en los pasos anteriores.
+
+Al confirmar, AWS Backup puede mostrar el siguiente aviso:
+
+> *"Seleccionando todos los recursos, proteges todos los recursos de tu cuenta. Tu selección actual podría respaldar varios de ellos e incurrir en implicaciones de costos."*
+
+Aceptamos y continuamos.
+
+---
+
+### Paso 9: Verificar los Jobs de Respaldo
+
+Nos dirigimos a la sección **Jobs** de AWS Backup.
+
+> Los **trabajos de backup (Jobs)** representan operaciones de respaldo individuales. La página muestra el estado de todas las operaciones de backup y restauración, incluyendo backups bajo demanda y ejecuciones de planes de respaldo programados.
+
+Verificamos que el último trabajo aparezca como **Completed**. Cada trabajo tiene su propio ID de seguimiento.
+
+Luego navegamos a **Protected Resources** y confirmamos que el volumen EBS respaldado aparece en la lista. Hacemos clic sobre él para ver el historial de puntos de recuperación disponibles.
+
+> Las organizaciones suelen crear **múltiples planes de respaldo** para abordar diferentes objetivos de recuperación según la carga de trabajo. Por ejemplo: las bases de datos de producción pueden requerir respaldos diarios con retención de 30 días, mientras que los recursos de desarrollo solo necesitan respaldos semanales con retención de 7 días.
+
+---
+
+## DIY
+
+*(Sección pendiente de completar con ejercicios propios del laboratorio.)*
+
+---
+
+## Recursos Adicionales
+
+- [Documentación de AWS Backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html)
+- [Documentación de Amazon EBS Snapshots](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSSnapshots.html)
+- [Documentación de AWS KMS](https://docs.aws.amazon.com/kms/latest/developerguide/overview.html)
+- [Planes de respaldo en AWS Backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/creating-a-backup-plan.html)
+- [AWS Backup con AWS Organizations](https://docs.aws.amazon.com/aws-backup/latest/devguide/manage-cross-account.html)
+- [Mejores prácticas de AWS Backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/best-practices.html)
