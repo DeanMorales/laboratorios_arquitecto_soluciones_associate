@@ -16,19 +16,27 @@ Retomando la aplicación web de alquiler de vehículos para visitantes, actualme
 
 ## Arquitectura del Laboratorio
 
-![Imagen Arquitectura](/imagenes_laboratorios/lab_api_DynamoDB_lambda.png "error")
+![Imagen Arquitectura](/imagenes_laboratorios/lab_api_DynamoDB_lambda.png "Diagrama de arquitectura: API Gateway → Lambda → DynamoDB")
+
 ---
 
 ## Conceptos Clave
 
-| Concepto | Descripción breve |
+| Concepto | Descripción |
 |---|---|
-| **DynamoDB** | Base de datos NoSQL totalmente administrada por AWS |
-| **API** | Interfaz de programación de aplicaciones |
-| **API Gateway** | Servicio para crear, publicar y gestionar APIs |
-| **API REST** | Estilo arquitectónico para servicios web stateless |
-| **Microservicios** | Arquitectura de componentes independientes y desacoplados |
-| **SQL vs NoSQL** | Bases de datos relacionales vs no relacionales |
+| **DynamoDB** | Base de datos NoSQL totalmente administrada por AWS, con latencia de milisegundos a cualquier escala |
+| **API** | Interfaz de Programación de Aplicaciones; contrato que define cómo se comunican dos sistemas de software |
+| **API Gateway** | Servicio de AWS para crear, publicar, proteger y gestionar APIs a escala |
+| **API REST** | Estilo arquitectónico para servicios web que opera sin estado (stateless) usando HTTP |
+| **Microservicios** | Arquitectura donde la aplicación se divide en componentes pequeños, independientes y desplegables de forma autónoma |
+| **SQL vs NoSQL** | SQL usa esquemas fijos y escalado vertical; NoSQL usa esquemas flexibles y escalado horizontal |
+| **Integración Lambda Proxy** | Modo de integración donde API Gateway pasa el evento HTTP completo a Lambda sin transformaciones |
+| **Clave de partición** | Atributo primario en DynamoDB que determina la partición física donde se almacena un ítem |
+| **Clave de ordenación** | Atributo secundario en DynamoDB que permite organizar ítems con la misma clave de partición |
+| **Variables de entorno** | Valores de configuración externos inyectados en el entorno de ejecución de Lambda en tiempo de arranque |
+| **CORS** | Cross-Origin Resource Sharing; mecanismo que permite o restringe solicitudes HTTP entre dominios distintos |
+| **Stage (API Gateway)** | Entorno de despliegue de una API (por ejemplo: dev, test, prod); cada stage genera su propia URL |
+| **IAM Role** | Conjunto de permisos que otorga a un servicio de AWS (como Lambda) acceso controlado a otros servicios |
 
 ---
 
@@ -54,6 +62,14 @@ Cliente → HTTP Request (JSON) → API Gateway → Lambda → DynamoDB
 
 Amazon API Gateway actúa como el punto de entrada para que las aplicaciones accedan a datos, lógica de negocios o funcionalidad de servicios de backend. Gestiona solicitudes de API a gran escala, incluyendo autenticación, throttling, caché y monitoreo.
 
+**Tipos de API disponibles en API Gateway:**
+
+| Tipo | Descripción | Casos de uso |
+|---|---|---|
+| **HTTP API** | Más liviana y económica; soporta OIDC y OAuth 2.0 | Backends simples, latencia mínima |
+| **REST API** | Completa; soporta todas las funciones (caché, WAF, validación) | Aplicaciones empresariales |
+| **WebSocket API** | Conexión bidireccional persistente | Chat en tiempo real, notificaciones |
+
 ---
 
 ### SQL vs NoSQL
@@ -61,9 +77,11 @@ Amazon API Gateway actúa como el punto de entrada para que las aplicaciones acc
 | Característica | SQL (Relacional) | NoSQL (No relacional) |
 |---|---|---|
 | Esquema | Fijo y predefinido | Flexible y dinámico |
-| Escalabilidad | Vertical | Horizontal |
+| Escalabilidad | Vertical (más CPU/RAM) | Horizontal (más nodos) |
 | Consultas | SQL estándar | API propia por servicio |
-| Casos de uso | Transacciones complejas | Apps móviles, web, gaming |
+| Transacciones | ACID completas | Eventual consistency (por defecto) |
+| Casos de uso | Transacciones complejas, reportes | Apps móviles, web, gaming, IoT |
+| Ejemplos AWS | Amazon RDS, Aurora | DynamoDB, ElastiCache |
 
 ---
 
@@ -74,10 +92,19 @@ Amazon API Gateway actúa como el punto de entrada para que las aplicaciones acc
 **Principales beneficios**:
 
 - **Sin servidores**: no requiere aprovisionar, parchear ni administrar servidores, ni instalar software.
-- **Alto rendimiento**: latencia en milisegundos de un solo dígito.
-- **Escalabilidad automática**: maneja grandes volúmenes de datos sin intervención manual.
+- **Alto rendimiento**: latencia en milisegundos de un solo dígito, incluso con millones de solicitudes por segundo.
+- **Escalabilidad automática**: maneja grandes volúmenes de datos sin intervención manual; puede escalar hasta petabytes.
 - **Alta disponibilidad**: disponibilidad y tolerancia a fallos integradas en múltiples zonas de disponibilidad (AZ), sin necesidad de diseñar esa lógica en la aplicación.
 - **Flexibilidad de esquema**: permite agregar atributos a los ítems de forma independiente, agilizando el desarrollo.
+- **Seguridad integrada**: cifrado en reposo habilitado por defecto, integración con IAM para control de acceso granular.
+- **Streams y eventos**: DynamoDB Streams captura los cambios en la tabla en tiempo real para procesamiento posterior con Lambda u otros servicios.
+
+**Modelo de datos**:
+
+- **Tabla**: colección de ítems (equivale a una tabla en SQL).
+- **Ítem**: conjunto de atributos (equivale a una fila en SQL).
+- **Atributo**: par clave-valor dentro de un ítem (equivale a una columna en SQL, pero flexible).
+- **Clave primaria**: puede ser solo la clave de partición (*simple*) o la combinación de clave de partición + clave de ordenación (*compuesta*).
 
 ---
 
@@ -89,7 +116,46 @@ Un escaneo (`Scan`) lee todos los elementos de una tabla o de un índice secunda
 2. **Aplicación de filtros**: se aplica una expresión de filtro con comparaciones lógicas sobre los elementos escaneados.
 3. **Resultado final**: el atributo `Count` refleja el número de elementos devueltos después del filtro.
 
-> ⚠️ Los filtros no reducen el costo del escaneo: DynamoDB cobra por los elementos leídos **antes** de aplicar el filtro, no por los elementos devueltos.
+> ⚠️ Los filtros **no** reducen el costo del escaneo: DynamoDB cobra por los elementos leídos **antes** de aplicar el filtro, no por los elementos devueltos. Para consultas eficientes, utiliza operaciones `Query` con claves de partición conocidas en lugar de `Scan`.
+
+---
+
+### Métodos HTTP y Códigos de Estado
+
+Las APIs REST utilizan métodos HTTP estándar para expresar la intención de una operación:
+
+| Método | Operación CRUD | Descripción |
+|---|---|---|
+| `GET` | Read | Recuperar un recurso o lista de recursos |
+| `POST` | Create | Crear un nuevo recurso |
+| `PUT` | Update | Reemplazar un recurso existente completo |
+| `PATCH` | Update parcial | Actualizar solo algunos campos de un recurso |
+| `DELETE` | Delete | Eliminar un recurso |
+
+**Códigos de estado HTTP comunes**:
+
+| Código | Significado |
+|---|---|
+| `200 OK` | Solicitud exitosa |
+| `201 Created` | Recurso creado exitosamente |
+| `400 Bad Request` | Solicitud inválida (error del cliente) |
+| `401 Unauthorized` | Requiere autenticación |
+| `403 Forbidden` | Sin permisos para el recurso |
+| `404 Not Found` | Recurso no encontrado |
+| `500 Internal Server Error` | Error en el servidor/backend |
+
+---
+
+### CORS (Cross-Origin Resource Sharing)
+
+CORS es un mecanismo de seguridad del navegador que controla si las aplicaciones web de un dominio pueden acceder a recursos de un dominio diferente. Las APIs a las que acceden aplicaciones basadas en navegador típicamente requieren la configuración de CORS para especificar qué orígenes pueden hacer solicitudes.
+
+**Ejemplo**: si tu frontend está en `https://miaplicacion.com` y tu API en `https://api.miaplicacion.com`, el navegador bloqueará las solicitudes a menos que la API incluya los encabezados CORS adecuados.
+
+**Encabezados CORS principales**:
+- `Access-Control-Allow-Origin`: dominios autorizados a realizar solicitudes.
+- `Access-Control-Allow-Methods`: métodos HTTP permitidos (GET, POST, etc.).
+- `Access-Control-Allow-Headers`: encabezados personalizados permitidos en la solicitud.
 
 ---
 
@@ -107,8 +173,7 @@ Se utilizará un archivo de ejemplo escrito en **Python** para conectar la tabla
 - Realizar el **deploy del API** a un stage antes de probarlo.
 - Habilitar **CloudWatch Logs** en API Gateway para facilitar el debugging.
 
-
-
+---
 
 ## Práctica: Pasos del Laboratorio
 
@@ -119,128 +184,194 @@ En este laboratorio podrás:
 3. Crear una función Lambda para **crear**, **actualizar** y **consultar** elementos de la tabla.
 4. Exponer la función Lambda como una API RESTful mediante Amazon API Gateway.
 
-1. nos dirigimos a crear una tabla en el servicio de DynamoDB, en la consola.  y damos clic en "create table".
- - los requisitos de la tabla: 
- - nombre de la tabla: rental_app
- - partition key: record_type
- - sort key: id 
- - table settings: 
-    - default settings
+---
 
-  click en create table. 
+### Paso 1: Crear la tabla en DynamoDB
 
-2. solo queda esperar a que el *status* de la tabla pase a **Active** 
-> DynamoDB aplica una funcion hash al valor de la clave de partition  para determinar la particion fisica donde se almacenan los datos. Este mecanismo de distribucion admite el escalado horizonal y el acceso a datos de alto rendimiento. Cuando una tabla incluye tanto claves de partition como de ordenacion, varios elementos pueden compartir la mism aclave de particion, pero deben tener valores de clave de ordenacion unicos.
+Nos dirigimos al servicio de DynamoDB en la consola de AWS y damos clic en **Create table**.
 
-3. nos dirigimos a la lambda, seguramente aqui pondremos la funcion que acontinuacion se muestra, es un ejemplo de un handler.py para manejar las respuestas de la api, para que actualice la tabla de base de datos en DynamoDB
+Requisitos de la tabla:
 
-- Creamos nueva funcion:
-  - Author from scratch. empiezas por un simple hellow world
-  - en informacion basica: 
-    - Function name: labFuntion 
-    - runtime: Python 3.14 
-    - Architecture: x86_64
-    - clic en  **Change default execution role** 
-      - seleciona **Use an existing role** 
-      - lab_function_role_xxxxx
+| Parámetro | Valor |
+|---|---|
+| Nombre de la tabla | `rental_app` |
+| Partition key | `record_type` |
+| Sort key | `id` |
+| Table settings | Default settings |
 
-- clic en crear funcion
+Hacemos clic en **Create table**.
 
-4. dentro del entorno ya listo para trabajar, pegaremos en la seccion de *code* nuestra funcion lambda. es un entorno muy similar a visual studio 
+---
 
-como funciona: 
-- lambda almacena nuestra funcion en un S3 en cifrado en reposo
-- proporciona un almaenamiento de codigo seguro y duradero. al implementar codigo a traves de la consola, lambda maneja automaticamente la carga en Amazon S3 y mantiene el historial de versiones para las capacidades de reversion. 
+### Paso 2: Esperar a que la tabla esté activa
 
-siempre necesitamos actualizar y desplegar nuestra funciuon. dando click en **Deploy** 
+Solo queda esperar a que el *status* de la tabla pase a **Active**.
 
->  como vemos nuestra funcion obtiene el nombre de la tabla de DynamoDB mediante una variable de entorno de Lambda, por lo que acontinuacion debemos definirla en la seccion de **Configuracion**.
+> DynamoDB aplica una función hash al valor de la clave de partición para determinar la partición física donde se almacenan los datos. Este mecanismo de distribución admite el escalado horizontal y el acceso de alto rendimiento. Cuando una tabla incluye tanto clave de partición como de ordenación, varios ítems pueden compartir la misma clave de partición, pero deben tener valores de clave de ordenación únicos.
 
-5. definir variable de entorno. en la configuracion en *environment variables*  editar la configuracion
-  - agregar una nueva variable:
-  - key: TABLE_NAME 
-  - value: rental_app
+---
 
-  damos click en *Save* 
+### Paso 3: Crear la función Lambda
 
-de esta menera checamos el codigo y analizamos como maneja estas llamadas a la base de datos.
+Nos dirigimos al servicio Lambda. Creamos una nueva función con los siguientes parámetros:
 
-6. Testing: 
-  una parte fundamental es testear nuestra api. asi que debemos de mandar algunos test para ver que este funcionando de manera correcta. en la seccion de **code** en el boton **Test** . podremos crear todo un evento de prueba  dando click en **Create new test event**  
+| Parámetro | Valor |
+|---|---|
+| Método de creación | Author from scratch |
+| Function name | `labFunction` |
+| Runtime | Python 3.12 |
+| Architecture | x86_64 |
+| Execution role | Use an existing role → `lab_function_role_xxxxx` |
 
-- configuramos nuestro evento de testing. 
-    - event name: create_location
-    - Event sharing settings: prinvate 
-    - template_ hello world
-    - Event JSON: El del codigo de la linea 178-182
+Hacemos clic en **Create function**.
 
-  damos click en *save* y clicl en test*. bajamos a la consola de **output**  y vemos los resultados que arroja la consola. 
-  como resultados del testing se debio haber creado un elemento en nuestra tabla DynamoDB
+---
 
- ingresamos a DynamoDB 
- y exploramos nuestros elementos de la tabla. deberia aparecer ahi mismo. 
- para este laboratorio debes copiar  el id de la locacion, 
+### Paso 4: Desplegar el código de la función
 
-### creacion de la API Gateway
+Dentro del entorno de Lambda, pegamos nuestra función en la sección de **Code**. El editor integrado es similar a Visual Studio Code.
 
- una parte fundamental es el servicio de API Gateway, pues ofrece 3 tipos de API la de tipo HTTP, API REST y API Websocket. admiten patrones RESTful y con metodos HTTP estandar (GET, POST, PUT, PATCH, DELETE) para la comunicacion cliente-servidor sin estado.
+**¿Cómo gestiona Lambda el código?**
 
-- selecicona la tarjeta de  REST API.
-  - New API
-  - APIname : rental_app
-  - description -optional 
-  - Security policy: TLS_1_0
-  - click en create API.
+- Lambda almacena la función en Amazon S3 cifrado en reposo.
+- Proporciona un almacenamiento de código seguro y duradero.
+- Al implementar código a través de la consola, Lambda maneja automáticamente la carga en S3 y mantiene el historial de versiones para capacidades de reversión.
 
-  
-#### creacion de recursos 
-los recursos representan segmentos de la ruta URL en la estructura de una API y sirven como contenedores para los metodos HTTP. los recurrsos se pueden anidar para crear estructuras gerarquicas como /locations/{id}/vehicles.
+Siempre es necesario actualizar y desplegar la función. Para eso, hacemos clic en **Deploy**.
 
-> investigar los CORS Cross-Origin Resource Sharing es un mecanismo de seguridad del navegador que controla si las aplicaciones web de un dominio pueden acceder a recursos de un dominio diferente. las API a las que acceden las aplicaciones basadas en navegador tipicamente requieren la configuracion de CORS para especificar que origenes pueden hacer solicitudes.
+> Nuestra función obtiene el nombre de la tabla de DynamoDB mediante una variable de entorno de Lambda, por lo que a continuación debemos definirla en la sección de **Configuration**.
 
-creamos el recursos:
-- resource path: / 
-- resource name: locations 
--click en crear recursos. 
+---
 
-dentro de el  recurso location definiremos los meotodos:
-- meotod GET: 
-- tipo de integracion con Lambda. 
-- turn on: lambda proxy integration.
+### Paso 5: Definir variable de entorno
 
-- seleccionamos la funcion lambda que creamos en un inicio. 
-- integration timeout.
+En la sección **Configuration → Environment variables**, hacemos clic en **Edit** y agregamos una nueva variable:
 
-la integracion de timeout tiene una duracion maxima de 29000 ms , 29 sec pues los sistemas que necesitan mayor tiempo deben migrar a una arquitectura o patrones asincronicos con mecanismos de devolucion de llamada.
+| Key | Value |
+|---|---|
+| `TABLE_NAME` | `rental_app` |
 
-como resultado debemos ver el methodo creado GET justo debajo de /locations
+Hacemos clic en **Save**.
 
-como en lambda tambien tenemos la forma de testear nuestra API por medio de la pesatañ **test**. podemos ingresar un **headers**  y click en test. 
-analizamos el test. 
+---
 
-un status 200 indica que son exitosas. los codigos 400 indican problemas de solicitud no validas , y los errores 500 son para errores internos del b backend como no disponibilidad del serivico. 
----rental_app
+### Paso 6: Pruebas (Testing)
 
-sigamos creando el metodo POST con los mismos pasos. incluye test con el siguiente request body: 
+Una parte fundamental es testear nuestra función Lambda antes de exponerla como API. En la sección **Code**, hacemos clic en el botón **Test** y luego en **Create new test event**.
 
-```Python  
+Configuramos el evento de prueba:
+
+| Parámetro | Valor |
+|---|---|
+| Event name | `create_location` |
+| Event sharing settings | Private |
+| Template | hello-world |
+| Event JSON | *(ver código de referencia del laboratorio, líneas 178–182)* |
+
+Hacemos clic en **Save** y luego en **Test**. Revisamos la consola de **Output** para ver los resultados.
+
+Como resultado del testing, se debería haber creado un elemento en la tabla DynamoDB. Para verificarlo:
+
+1. Vamos al servicio DynamoDB.
+2. Abrimos la tabla `rental_app`.
+3. En la sección **Explore table items**, el nuevo elemento debe aparecer en la lista.
+
+> Para los siguientes pasos del laboratorio, copia el `id` de la ubicación creada.
+
+---
+
+### Paso 7: Creación de la API en API Gateway
+
+El servicio de API Gateway ofrece tres tipos de API: **HTTP**, **REST** y **WebSocket**. Todas admiten patrones RESTful con métodos HTTP estándar (GET, POST, PUT, PATCH, DELETE) para la comunicación cliente-servidor sin estado.
+
+Seleccionamos la tarjeta de **REST API** y configuramos:
+
+| Parámetro | Valor |
+|---|---|
+| Tipo | New API |
+| API name | `rental_app` |
+| Description | *(opcional)* |
+| Security policy | TLS 1.2 |
+
+Hacemos clic en **Create API**.
+
+---
+
+#### Paso 7.1: Creación de recursos
+
+Los recursos representan segmentos de la ruta URL en la estructura de una API y sirven como contenedores para los métodos HTTP. Los recursos se pueden anidar para crear estructuras jerárquicas, por ejemplo: `/locations/{id}/vehicles`.
+
+Creamos el recurso:
+
+| Parámetro | Valor |
+|---|---|
+| Resource path | `/` |
+| Resource name | `locations` |
+
+Hacemos clic en **Create resource**.
+
+> **Nota sobre CORS**: Cross-Origin Resource Sharing es un mecanismo de seguridad del navegador que controla si las aplicaciones web de un dominio pueden acceder a recursos de un dominio diferente. Las APIs a las que acceden aplicaciones basadas en navegador típicamente requieren configuración de CORS para especificar qué orígenes pueden hacer solicitudes.
+
+---
+
+#### Paso 7.2: Crear el método GET
+
+Dentro del recurso `/locations`, definimos el método **GET**:
+
+| Parámetro | Valor |
+|---|---|
+| Tipo de integración | Lambda Function |
+| Lambda proxy integration | Activado ✅ |
+| Lambda function | `labFunction` |
+| Integration timeout | 29,000 ms (máximo) |
+
+> La integración timeout tiene una duración máxima de **29,000 ms (29 segundos)**. Los sistemas que requieran mayor tiempo de procesamiento deben migrar a una arquitectura asíncrona con mecanismos de devolución de llamada (callbacks).
+
+Como resultado, veremos el método `GET` creado debajo de `/locations`.
+
+**Testing del método GET**: Al igual que en Lambda, podemos testear nuestra API directamente desde la pestaña **Test**. Podemos ingresar headers opcionales y hacer clic en **Test**. Un **status 200** indica que la solicitud fue exitosa.
+
+---
+
+#### Paso 7.3: Crear el método POST
+
+Seguimos los mismos pasos del método GET para crear el método **POST** en el recurso `/locations`.
+
+Para el testing, usamos el siguiente cuerpo de solicitud:
+
+```json
 {
   "name": "viper roller coaster",
   "vehicles_available": 5
 }
 ```
 
-testeamos y nos debe dar un status de 201 como resultado exitoso. 
-volvemos a nuestro dynamos y hacemos un scaneo para ver los elementos en la tabla. y debe estar ingresado ese elemto nuevo. 
+El resultado esperado es un **status 201**, que indica que el recurso fue creado exitosamente.
 
-
-- por ultimo deployamos nuestra API  por medio de la implemetnacion de API. definimos el Stage y su nombre de **Test** 
-
+Volvemos a DynamoDB y realizamos un escaneo de la tabla para verificar que el nuevo elemento fue ingresado correctamente.
 
 ---
-## DIY 
 
+### Paso 8: Desplegar la API
 
+Por último, desplegamos nuestra API mediante la opción **Deploy API**. Definimos el stage de destino:
+
+| Parámetro | Valor |
+|---|---|
+| Stage | New stage |
+| Stage name | `Test` |
+
+Hacemos clic en **Deploy**. API Gateway generará la URL base del stage, que tendrá la forma:
+
+```
+https://{api-id}.execute-api.{region}.amazonaws.com/Test
+```
+
+---
+
+## DIY
+
+*(Sección pendiente de completar con ejercicios propios del laboratorio.)*
 
 ---
 
@@ -251,3 +382,5 @@ volvemos a nuestro dynamos y hacemos un scaneo para ver los elementos en la tabl
 - [Documentación de Amazon API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html)
 - [Integración Lambda con API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-lambda-function-handler.html)
 - [DynamoDB: operaciones Scan](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html)
+- [DynamoDB: operaciones Query vs Scan](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-query-scan.html)
+- [CORS en API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-cors.html)
