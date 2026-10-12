@@ -24,6 +24,7 @@ Cada laboratorio incluye un caso de uso real, diagramas de arquitectura, pasos d
 | 3 | [DNS](#laboratorio-dns-con-route-53) | Servidor interno de noticias para empleados con acceso DNS privado | Route 53, EC2, VPC |
 | 4 | [Serverless](#laboratorio-fundamentos-serverless) | Sistema de recopilación de comentarios y calificaciones de visitantes | Lambda, CloudWatch, S3, DynamoDB, API Gateway |
 | 5 | [Alta Disponibilidad](#laboratorio-alta-disponibilidad-web) | Aplicación web de agencia de viajes distribuida en múltiples AZ | ALB, Auto Scaling, EC2, CloudWatch, CloudFront |
+| 6 | [API REST con DynamoDB](#laboratorio-api-rest-con-dynamodb) | Migración de base de datos relacional a NoSQL para app de alquiler de vehículos | API Gateway, Lambda, DynamoDB |
 
 ---
 
@@ -175,6 +176,40 @@ Configura una arquitectura de alta disponibilidad utilizando Application Load Ba
 
 ---
 
+### Laboratorio API REST con DynamoDB
+
+**Caso de Uso**: Aplicación web de alquiler de vehículos para visitantes que actualmente corre sobre una base de datos SQL relacional. Las pruebas de estrés revelan limitaciones en usuarios concurrentes, por lo que el equipo de TI busca una solución NoSQL escalable y rentable que maneje altos volúmenes de tráfico sin inversión significativa en infraestructura.
+
+**Descripción**:
+Migra una aplicación de alquiler de vehículos hacia una arquitectura serverless completa. Crearás una tabla DynamoDB, una función Lambda en Python que gestione operaciones CRUD sobre esa tabla, y una REST API en API Gateway que exponga los endpoints públicamente. Aprenderás la diferencia entre SQL y NoSQL, el modelo de datos de DynamoDB con claves de partición y ordenación, y cómo encadenar los tres servicios con integración Lambda proxy.
+
+**Servicios AWS**: API Gateway, Lambda, DynamoDB, IAM, CloudWatch
+
+**Conceptos Clave**:
+- Amazon DynamoDB: base de datos NoSQL totalmente administrada, escalabilidad horizontal, latencia de un dígito en milisegundos
+- SQL vs NoSQL: esquema fijo vs flexible, escalado vertical vs horizontal
+- Claves de partición y ordenación en DynamoDB
+- Operaciones Scan en DynamoDB y su impacto en costos
+- Variables de entorno en funciones Lambda
+- Integración Lambda proxy en API Gateway
+- Métodos HTTP: GET, POST y códigos de estado (200, 201, 400, 500)
+- CORS (Cross-Origin Resource Sharing)
+- Stages y deploy de APIs en API Gateway
+- Roles de ejecución IAM para Lambda
+
+**Imagen de Referencia**:
+
+![Arquitectura API REST con DynamoDB](imagenes_laboratorios/lab_api_DynamoDB_lambda.png)
+
+**Recursos Adicionales**:
+- [Documentación de Amazon DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html)
+- [Documentación de AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html)
+- [Documentación de Amazon API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html)
+- [Integración Lambda con API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-lambda-function-handler.html)
+- [DynamoDB: operaciones Scan](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html)
+
+---
+
 ## Requisitos del Workshop
 
 Para completar estos laboratorios, necesitarás configurar tu entorno de desarrollo. Elige una de las siguientes opciones:
@@ -199,6 +234,7 @@ Para completar estos laboratorios, necesitarás configurar tu entorno de desarro
 | DNS | Route 53, EC2, VPC | Intermedio | 1-2 horas |
 | Serverless | Lambda, CloudWatch | Principiante | 45-60 min |
 | Alta Disponibilidad | ALB, Auto Scaling, EC2 | Avanzado | 2-3 horas |
+| API REST con DynamoDB | API Gateway, Lambda, DynamoDB, IAM | Intermedio | 1-2 horas |
 
 ### Recomendaciones
 

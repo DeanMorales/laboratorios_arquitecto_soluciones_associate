@@ -16,8 +16,7 @@ Retomando la aplicación web de alquiler de vehículos para visitantes, actualme
 
 ## Arquitectura del Laboratorio
 
-> *(Diagrama por agregar)*
-
+![Imagen Arquitectura](/imagenes_laboratorios/lab_api_DynamoDB_lambda.png "error")
 ---
 
 ## Conceptos Clave
